@@ -32,6 +32,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [AdsAnalysisController::class, 'index'])->name('index');
         Route::get('/create', [AdsAnalysisController::class, 'create'])->name('create');
         Route::post('/', [AdsAnalysisController::class, 'store'])->name('store');
+        Route::post('/upload-csv', [AdsAnalysisController::class, 'uploadCsv'])->name('upload-csv');
         Route::get('/{analysis}', [AdsAnalysisController::class, 'show'])->name('show');
         Route::get('/{analysis}/pdf', [AdsAnalysisController::class, 'exportPdf'])->name('pdf');
     });

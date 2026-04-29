@@ -138,19 +138,24 @@ Use professional and objective English language.";
             abort(403);
         }
 
-        // Pastikan memory limit cukup untuk PDF
-        ini_set('memory_limit', '256M');
+        try {
+            ini_set('memory_limit', '256M');
 
-        $parsedown = new \Parsedown();
-        $htmlContent = $parsedown->text($analysis->ai_analysis);
+            $parsedown = new \Parsedown();
+            $htmlContent = $parsedown->text($analysis->ai_analysis);
 
-        $pdf = Pdf::loadView('analyses.pdf', compact('analysis', 'htmlContent'));
+            // Gunakan full namespace untuk memastikan tidak ada konflik
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('analyses.pdf', compact('analysis', 'htmlContent'));
 
-        // Gunakan Str::slug agar nama file aman dari karakter aneh
-        $fileName = 'Analysis-' . Str::slug($analysis->campaign_name) . '.pdf';
+            $fileName = 'Analysis-' . \Illuminate\Support\Str::slug($analysis->campaign_name) . '.pdf';
 
-        return $pdf->download($fileName);
+            return $pdf->download($fileName);
+        } catch (\Exception $e) {
+            // Jika error, tampilkan pesan error-nya di layar
+            return "Gagal membuat PDF. Error: " . $e->getMessage();
+        }
     }
+
 
 
     /**

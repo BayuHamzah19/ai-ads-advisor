@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
+
 
 class AdsAnalysisController extends Controller
 {
@@ -60,7 +63,7 @@ class AdsAnalysisController extends Controller
 
         // 2. Prepare Prompts
         $systemPrompt = "You are an AI Digital Ads Specialist. Your task is to analyze advertising campaign metrics (Facebook, Google, TikTok) and provide sharp technical recommendations to improve ROAS. You must be able to identify campaigns that are wasting budget and provide concrete steps for optimizing creatives, audiences, and budget allocation.";
-        
+
         $userPrompt = "Analyze the following campaign:
   * Campaign Name: " . $data['campaign_name'] . "
   * Platform: " . $data['platform'] . "
@@ -135,13 +138,20 @@ Use professional and objective English language.";
             abort(403);
         }
 
+        // Pastikan memory limit cukup untuk PDF
+        ini_set('memory_limit', '256M');
+
         $parsedown = new \Parsedown();
         $htmlContent = $parsedown->text($analysis->ai_analysis);
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('analyses.pdf', compact('analysis', 'htmlContent'));
-        
-        return $pdf->download('Analysis-' . str_replace(' ', '-', $analysis->campaign_name) . '.pdf');
+        $pdf = Pdf::loadView('analyses.pdf', compact('analysis', 'htmlContent'));
+
+        // Gunakan Str::slug agar nama file aman dari karakter aneh
+        $fileName = 'Analysis-' . Str::slug($analysis->campaign_name) . '.pdf';
+
+        return $pdf->download($fileName);
     }
+
 
     /**
      * Multi-level fallback AI call logic.

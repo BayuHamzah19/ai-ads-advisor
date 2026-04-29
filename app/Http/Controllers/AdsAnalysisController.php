@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
 
-
 class AdsAnalysisController extends Controller
 {
     /**
@@ -63,7 +62,7 @@ class AdsAnalysisController extends Controller
 
         // 2. Prepare Prompts
         $systemPrompt = "You are an AI Digital Ads Specialist. Your task is to analyze advertising campaign metrics (Facebook, Google, TikTok) and provide sharp technical recommendations to improve ROAS. You must be able to identify campaigns that are wasting budget and provide concrete steps for optimizing creatives, audiences, and budget allocation.";
-
+        
         $userPrompt = "Analyze the following campaign:
   * Campaign Name: " . $data['campaign_name'] . "
   * Platform: " . $data['platform'] . "
@@ -144,19 +143,15 @@ Use professional and objective English language.";
             $parsedown = new \Parsedown();
             $htmlContent = $parsedown->text($analysis->ai_analysis);
 
-            // Gunakan full namespace untuk memastikan tidak ada konflik
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('analyses.pdf', compact('analysis', 'htmlContent'));
-
-            $fileName = 'Analysis-' . \Illuminate\Support\Str::slug($analysis->campaign_name) . '.pdf';
-
-            return $pdf->download($fileName);
+            $pdf = Pdf::loadView('analyses.pdf', compact('analysis', 'htmlContent'));
+            
+            $fileName = 'Analysis-' . Str::slug($analysis->campaign_name) . '.pdf';
+            
+            return $pdf->stream($fileName);
         } catch (\Exception $e) {
-            // Jika error, tampilkan pesan error-nya di layar
             return "Gagal membuat PDF. Error: " . $e->getMessage();
         }
     }
-
-
 
     /**
      * Multi-level fallback AI call logic.
@@ -184,7 +179,6 @@ Use professional and objective English language.";
     private function callGemini($systemPrompt, $userPrompt)
     {
         $apiKey = config('services.gemini.key');
-        // Mencoba versi v1beta dengan penamaan terbaru
         $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={$apiKey}";
 
         try {
